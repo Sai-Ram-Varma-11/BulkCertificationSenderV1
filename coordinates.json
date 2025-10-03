@@ -1,0 +1,9 @@
+{
+	"fields": {
+		"Name": {"x": 900, "y": 650, "font_size": 48, "color": "#000000", "anchor": "mm", "font_path": null},
+		"Event": {"x": 900, "y": 750, "font_size": 32, "color": "#333333", "anchor": "mm", "font_path": null},
+		"Date": {"x": 900, "y": 830, "font_size": 28, "color": "#555555", "anchor": "mm", "font_path": null},
+		"Organizer": {"x": 900, "y": 910, "font_size": 28, "color": "#555555", "anchor": "mm", "font_path": null}
+	},
+	"qr": {"x": 1500, "y": 820, "size": 200}
+}

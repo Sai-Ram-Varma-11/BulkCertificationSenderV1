@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventEye - The Automated Recognition Nexus (V13)</title>
+    <!-- Load Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Load Tailwind CSS CDN for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* --- 1. Custom Tailwind Config & Base Styles --- */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ultra-dark-black': '#030303',
+                        'dark-sea-blue': '#0A1931',
+                        'radiant-pink': '#FF0088', 
+                        'radiant-purple': '#9B59B6',
+                        'radiant-blue': '#22D3EE',
+                        'light-text': '#E0E7FF',
+                        'blood-red': '#B22222', 
+                        'dark-blood-orange': '#CC5500', /* Terrifying Orange Color */
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+        
+        body {
+            background-color: #030303; 
+            font-family: 'Inter', sans-serif;
+            color: #E0E7FF;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            cursor: none; /* Hide default cursor to use the custom dot */
+        }
+
+        /* --- 2. Glassmorphism & Button Styles --- */
+        .glass-panel {
+            background: rgba(10, 25, 49, 0.2); 
+            backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 50px 0 rgba(0, 0, 0, 0.4);
+            animation: popUp 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        @keyframes popUp {
+            0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        /* Radiant Button Style (Pink, Purple, Blue) */
+        .radiant-btn {
+            background: linear-gradient(45deg, #FF0088, #9B59B6, #22D3EE);
+            transition: all 0.5s ease;
+            position: relative;
+            z-index: 1;
+        }
+        .radiant-btn:hover {
+            background: linear-gradient(45deg, #22D3EE, #9B59B6, #FF0088); 
+            /* Increased Shadow for better glow */
+            box-shadow: 0 0 35px rgba(155, 89, 182, 1), 0 0 15px rgba(155, 89, 182, 0.7);
+            transform: scale(1.05);
+        }
+
+        /* --- 3. Transparent Bordered Heading (Minimal Glow) --- */
+        .stroke-text {
+            -webkit-text-fill-color: transparent; 
+            -webkit-text-stroke: 3px #E0E7FF; 
+            /* Drastically reduced glow for simple border effect */
+            text-shadow: 
+                0 0 5px #FFFFFF, 
+                0 0 5px #FFFFFF, 
+                0 0 7px #E0E7FF; 
+            line-height: 0.9;
+            transition: all 0.5s;
+        }
+        
+        /* --- 4. Deep Space Background Animations --- */
+        .star {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle linear infinite;
+        }
+        
+        /* Asteroids now use CSS variables for random movement (set by JS) */
+        .asteroid {
+            position: absolute;
+            background-color: #555;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: meteoroidMove var(--duration) linear infinite;
+        }
+
+        /* Falling stars in pairs (parent/child) */
+        .shooting-star, .shooting-star-child {
+            position: absolute;
+            width: 3px;
+            height: 80px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #E0E7FF);
+            transform: rotate(45deg);
+            opacity: 0;
+            animation: shootingStar var(--duration) linear infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+        
+        /* Keyframes for random asteroid movement */
+        @keyframes meteoroidMove {
+            0% { transform: translate(var(--start-x), var(--start-y)) rotate(0deg); opacity: 0; }
+            5% { opacity: 0.7; }
+            50% { transform: translate(var(--mid-x), var(--mid-y)) rotate(var(--rand-deg)); }
+            95% { opacity: 0.7; }
+            100% { transform: translate(var(--end-x), var(--end-y)) rotate(calc(var(--rand-deg) * 2)); opacity: 0; }
+        }
+        
+        /* Keyframes for paired shooting stars (normal speed) */
+        @keyframes shootingStar {
+            0% { top: var(--start-y); right: var(--start-x); opacity: 0; }
+            0.1% { opacity: 1; }
+            10% { top: var(--end-y); right: var(--end-x); opacity: 0; }
+            100% { top: var(--end-y); right: var(--end-x); opacity: 0; }
+        }
+
+        /* --- 5. Simple Custom Cursor Dot --- */
+        #custom-cursor {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            background-color: #E0E7FF; /* Subtle white dot */
+            box-shadow: 0 0 5px #E0E7FF, 0 0 10px rgba(255, 255, 255, 0.4); /* Soft glow */
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out; /* Smooth following */
+        }
+
+        /* --- 6. Template Carousel (Rotation Motion Added) --- */
+        /* Template Item Rotation Pulse */
+        @keyframes template-motion {
+            0%, 100% { transform: scale(1) rotateY(0deg); }
+            50% { transform: scale(1.02) rotateY(5deg); } /* Subtle 3D rotation pulse */
+        }
+        .template-carousel {
+            display: flex;
+            width: fit-content;
+            animation: scroll-left 40s linear infinite;
+            padding-right: 5rem;
+        }
+        .template-item {
+            min-width: 300px;
+            margin-right: 1.5rem;
+            transition: none;
+            /* Apply the subtle 3D rotation motion */
+            animation: template-motion 8s ease-in-out infinite alternate;
+        }
+        /* Keep original scroll-left for looping */
+        @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- 7. Final Graphical Animation (5 Orbits Star Shape & Fixed Nucleus) --- */
+        .galaxy-orb-container {
+            perspective: 1000px;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            position: relative; 
+        }
+        .galaxy-orb {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: rotateOrb 30s linear infinite; 
+        }
+        
+        /* 5 Orbits in Star Shape: 45x brighter white glow */
+        .orb-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid; 
+            opacity: 1; 
+            animation: pulse 4s ease-in-out infinite alternate;
+            border-color: #E0E7FF; 
+            filter: drop-shadow(0 0 35px #E0E7FF) drop-shadow(0 0 50px #FFFFFF);
+        }
+        
+        /* Defining 5 distinct rotational planes */
+        .orb-layer:nth-child(1) { transform: rotateX(90deg) rotateY(0deg) scale(1); animation-delay: 0s;}    /* Horizontal 1 */
+        .orb-layer:nth-child(2) { transform: rotateX(0deg) rotateY(0deg) scale(0.95); animation-delay: -0.5s;} /* Vertical 1 */
+        .orb-layer:nth-child(3) { transform: rotateX(45deg) rotateY(45deg) scale(0.9); animation-delay: -1s;}  /* Diagonal 1 (45 degrees) */
+        .orb-layer:nth-child(4) { transform: rotateX(-45deg) rotateY(-45deg) scale(0.85); animation-delay: -1.5s;}/* Diagonal 2 (-45 degrees) */
+        .orb-layer:nth-child(5) { transform: rotateX(90deg) rotateY(90deg) scale(0.80); animation-delay: -2s;} /* Horizontal 2 (Perpendicular to 1) */
+
+        /* Nucleus: Static, Solid Dark Blood Orange Glow */
+        .nucleus-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #CC5500; /* Dark Blood Orange */
+            box-shadow: 
+                0 0 50px #CC5500, /* Orange glow */
+                0 0 100px #FF8C00, /* Brighter orange highlight */
+                0 0 150px #CC5500; /* More intense orange glow */
+            z-index: 10;
+        }
+
+        /* NEW: Small White Glowing Dot */
+        .nucleus-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px; /* Small size */
+            height: 8px;
+            border-radius: 50%;
+            /* Offset right and up relative to the center */
+            transform: translate(24px, -24px); 
+            background-color: #E0E7FF; /* White color */
+            box-shadow: 
+                0 0 10px #E0E7FF, /* White glow */
+                0 0 20px #FFFFFF; 
+            z-index: 15; /* Higher z-index to sit on top of the nucleus */
+            animation: pulseDot 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseDot {
+            from { opacity: 0.8; transform: translate(24px, -24px) scale(1); }
+            to { opacity: 1; transform: translate(24px, -24px) scale(1.1); }
+        }
+
+        @keyframes rotateOrb {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+        @keyframes pulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <!-- Simple Custom Cursor Dot -->
+    <div id="custom-cursor"></div> 
+
+    <!-- Deep Space Background: Starfield, Asteroids, and Shooting Stars -->
+    <div id="starfield" class="fixed inset-0 pointer-events-none z-0"></div>
+
+    <!-- Main Content Wrapper -->
+    <main class="relative z-10">
+
+        <!-- Section 1: Hero and Glass Pop-up -->
+        <section class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+            <div class="glass-panel max-w-6xl w-full p-8 md:p-16 rounded-3xl text-center">
+                
+                <!-- Main Heading (Minimal Glow at Border) -->
+                <h1 class="stroke-text text-7xl sm:text-8xl lg:text-[10rem] font-black uppercase tracking-tighter mb-8">
+                    EventEye
+                </h1>
+                
+                <p class="text-xl sm:text-3xl font-light max-w-3xl mx-auto text-light-text/80 mt-10">
+                    The revolutionary platform for automated certificate generation and delivery. <br class="hidden sm:block">
+                    **From event to inbox in seconds.**
+                </p>
+                
+                <a href="#about" class="radiant-btn inline-block mt-12 px-8 py-3 text-lg font-bold rounded-xl 
+                                     text-ultra-dark-black transition duration-300 transform hover:scale-105">
+                    See How It Works 👇
+                </a>
+            </div>
+        </section>
+
+        <!-- Section 2: Product Info and Mockup (Manual Image Placeholder) -->
+        <section id="about" class="py-20 md:py-32 bg-dark-sea-blue/30">
+            <img id="1.png"></img>
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-extrabold mb-4">
+                        Intelligent Recognition, Instant Delivery
+                    </h2>
+                    <p class="text-lg text-light-text/70 max-w-4xl mx-auto">
+                        We streamline the tedious process of recognizing achievement, allowing you to focus on your event, not the paperwork.
+                    </p>
+                </div>
+                
+                <!-- Large Image Placeholder (Manual Image Upload Space) -->
+                <div class="glass-panel p-4 sm:p-8 rounded-3xl w-full">
+                    <div class="bg-ultra-dark-black rounded-xl p-4 md:p-12 border border-gray-700 shadow-2xl shadow-black/70">
+                        <div class="flex flex-col lg:flex-row justify-between items-center mb-8">
+                            <h3 class="text-2xl font-bold text-light-text">EventEye: Certificate Studio Interface Preview</h3>
+                        </div>
+                        
+                        <!-- This area is reserved for manually uploading your large mockup image -->
+                        <div id="image-placeholder" 
+                             class="relative bg-[#0F172A] min-h-[450px] rounded-lg overflow-hidden flex items-center justify-center border-4 border-dashed border-radiant-blue/50 text-light-text/50 text-2xl p-8">
+                            <p>Large Application Mockup Placeholder (Please insert your image here)</p>
+                            <span class="absolute top-4 right-4 text-sm text-radiant-pink/80">Manual Upload Area</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA Zone for the main idea -->
+                <div class="mt-20 text-center">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-6 text-radiant-pink">
+                        The Power of Automated Recognition
+                    </h3>
+                    <p class="text-xl text-light-text/90 mb-8 max-w-4xl mx-auto">
+                        Our main idea is simple: **Direct, one-click delivery** of custom-created certificates to emails or WhatsApp, using smart templates and bulk processing. Ready to automate your achievements?
+                    </p>
+                    <button class="radiant-btn inline-block px-10 py-4 text-xl font-bold rounded-full 
+                                     text-ultra-dark-black hover:shadow-cyan-400/40 transition duration-500 transform hover:scale-110
+                                     uppercase tracking-wider">
+                        Explore Our Delivery Engine
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 3: Auto-Scrolling Template Showcase -->
+        <section id="templates" class="py-20 md:py-32 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-extrabold mb-4 text-radiant-pink">
+                    Endless Possibilities
+                </h2>
+                <p class="text-lg text-light-text/70">
+                    Choose from our fantastic, ever-growing library of certificate templates.
+                </p>
+            </div>
+            
+            <div class="relative w-full">
+                <!-- Duplicate the content to enable continuous loop without gap -->
+                <div class="template-carousel">
+                    <!-- Templates Set 1 (7 items) -->
+                    <div class="flex">
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-radiant-pink/50 mb-3">
+                                Template 1: Futuristic Tech
+                            </div>
+                            <span class="text-sm font-semibold text-radiant-pink">Coding Workshop</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-radiant-blue/50 mb-3">
+                                Template 2: Professional Award
+                            </div>
+                            <span class="text-sm font-semibold text-radiant-blue">Excellence in Service</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-light-text/50 mb-3">
+                                Template 3: Minimalist Design
+                            </div>
+                            <span class="text-sm font-semibold text-light-text">Participation</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-yellow-400/50 mb-3">
+                                Template 4: Golden Seal
+                            </div>
+                            <span class="text-sm font-semibold text-yellow-400">Distinction</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-radiant-purple/50 mb-3">
+                                Template 5: Cyber Abstract
+                            </div>
+                            <span class="text-sm font-semibold text-radiant-purple">Hackathon Winner</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-green-400/50 mb-3">
+                                Template 6: Nature Green
+                            </div>
+                            <span class="text-sm font-semibold text-green-400">Volunteer Service</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-red-400/50 mb-3">
+                                Template 7: Fire & Energy
+                            </div>
+                            <span class="text-sm font-semibold text-red-400">Top Performer</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Templates Set 2 (Duplicate for continuous looping effect) -->
+                    <div class="flex">
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-radiant-pink/50 mb-3">
+                                Template 1: Futuristic Tech
+                            </div>
+                            <span class="text-sm font-semibold text-radiant-pink">Coding Workshop</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-radiant-blue/50 mb-3">
+                                Template 2: Professional Award
+                            </div>
+                            <span class="text-sm font-semibold text-radiant-blue">Excellence in Service</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-light-text/50 mb-3">
+                                Template 3: Minimalist Design
+                            </div>
+                            <span class="text-sm font-semibold text-light-text">Participation</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-yellow-400/50 mb-3">
+                                Template 4: Golden Seal
+                            </div>
+                            <span class="text-sm font-semibold text-yellow-400">Distinction</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-radiant-purple/50 mb-3">
+                                Template 5: Cyber Abstract
+                            </div>
+                            <span class="text-sm font-semibold text-radiant-purple">Hackathon Winner</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-green-400/50 mb-3">
+                                Template 6: Nature Green
+                            </div>
+                            <span class="text-sm font-semibold text-green-400">Volunteer Service</span>
+                        </div>
+                        <div class="template-item glass-panel p-6 rounded-xl text-center shadow-lg shadow-black/50">
+                            <div class="w-full h-40 bg-gray-700 rounded-lg flex items-center justify-center text-sm text-white/50 border border-red-400/50 mb-3">
+                                Template 7: Fire & Energy
+                            </div>
+                            <span class="text-sm font-semibold text-red-400">Top Performer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                 <button class="radiant-btn inline-block px-8 py-3 text-lg font-semibold rounded-lg 
+                                     text-ultra-dark-black transition duration-300 transform hover:scale-105">
+                    View All Templates
+                </button>
+            </div>
+        </section>
+        
+        <!-- Section 4: Final Special Graphical Animation (3D Rotating Orb - 5 Orbits & Fixed Nucleus) -->
+        <section class="py-20 md:py-32 bg-dark-sea-blue/50">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+                <h2 class="text-5xl font-extrabold mb-16 text-light-text">
+                    Witness the Nexus of Technology
+                </h2>
+                
+                <div class="galaxy-orb-container">
+                    <div class="galaxy-orb">
+                        <!-- 5 concentric, rotating planes -->
+                        <div class="orb-layer"></div>
+                        <div class="orb-layer"></div>
+                        <div class="orb-layer"></div>
+                        <div class="orb-layer"></div>
+                        <div class="orb-layer"></div>
+                    </div>
+                    <!-- Nucleus: Static, Solid Dark Blood Orange Glow -->
+                    <div class="nucleus-core"></div>
+                    <!-- NEW: White Glowing Dot on top right of nucleus -->
+                    <div class="nucleus-dot"></div>
+                </div>
+                
+                <p class="text-xl text-light-text/70 mt-16 max-w-3xl mx-auto">
+                    This is the future of event recognition. Dive into the seamless integration of design, data, and delivery.
+                </p>
+                
+                <a href="#templates" class="radiant-btn inline-block mt-12 px-8 py-3 text-lg font-bold rounded-xl 
+                                     text-ultra-dark-black transition duration-300 transform hover:scale-105">
+                    Back to Templates
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-ultra-dark-black text-light-text/50 border-t border-gray-800 py-8">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center text-sm">
+            <p>&copy; 2024 EventEye. All rights reserved. | Powering automated recognition with high-fidelity design.</p>
+            <div class="flex justify-center space-x-4 mt-2">
+                <a href="#" class="hover:text-radiant-pink transition">Privacy Policy</a>
+                <a href="#" class="hover:text-radiant-pink transition">Terms of Service</a>
+                <a href="#" class="hover:text-radiant-pink transition">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- JavaScript for Deep Space Background and Cursor Dot ---
+        const starfield = document.getElementById('starfield');
+        const numStars = 80;
+        const numAsteroidGroups = 10;
+        const numShootingStarPairs = 5;
+
+        // NEW: Get the custom cursor element
+        const customCursor = document.getElementById('custom-cursor'); 
+
+
+        // 1. Generate Space Elements (Stars, Asteroids, and Shooting Stars)
+        
+        // Standard Stars
+        for (let i = 0; i < numStars; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            const size = Math.random() * 2 + 0.5;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.top = `${Math.random() * 100}vh`;
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.animationDelay = `${Math.random() * 10}s`;
+            star.style.animationDuration = `${5 + Math.random() * 5}s`;
+            starfield.appendChild(star);
+        }
+
+        // Randomly Roaming Asteroids
+        for (let i = 0; i < numAsteroidGroups; i++) {
+            const asteroid = document.createElement('div');
+            asteroid.classList.add('asteroid');
+
+            // Generate large random movement coordinates outside the viewport
+            const startX = Math.random() * 200 - 50; 
+            const startY = Math.random() * 200 - 50; 
+            const midX = Math.random() * 200 - 50;
+            const midY = Math.random() * 200 - 50;
+            const endX = Math.random() * 200 - 50;
+            const endY = Math.random() * 200 - 50;
+
+            asteroid.style.setProperty('--start-x', `${startX}vw`);
+            asteroid.style.setProperty('--start-y', `${startY}vh`);
+            asteroid.style.setProperty('--mid-x', `${midX}vw`);
+            asteroid.style.setProperty('--mid-y', `${midY}vh`);
+            asteroid.style.setProperty('--end-x', `${endX}vw`);
+            asteroid.style.setProperty('--end-y', `${endY}vh`);
+            asteroid.style.setProperty('--rand-deg', `${Math.random() * 360}deg`);
+            
+            // Asteroid speed similar to paired falling stars
+            asteroid.style.setProperty('--duration', `${30 + Math.random() * 15}s`); 
+
+            asteroid.style.animationDelay = `-${Math.random() * 90}s`; 
+            starfield.appendChild(asteroid);
+        }
+        
+        // Paired Falling Stars
+        for (let i = 0; i < numShootingStarPairs; i++) {
+            const startX = Math.random() * 100;
+            const startY = Math.random() * 50;
+            const endX = startX + 150; 
+            const endY = startY + 150;
+            // Decreased speed for stars: was 20-30s, now 30-45s
+            const duration = 30 + Math.random() * 15; 
+
+            // Parent Star
+            const parentStar = document.createElement('div');
+            parentStar.classList.add('shooting-star');
+            parentStar.style.setProperty('--start-x', `${startX}vw`);
+            parentStar.style.setProperty('--start-y', `${startY}vh`);
+            parentStar.style.setProperty('--end-x', `${endX}vw`);
+            parentStar.style.setProperty('--end-y', `${endY}vh`);
+            parentStar.style.setProperty('--duration', `${duration}s`);
+            parentStar.style.animationDelay = `-${Math.random() * duration}s`;
+            parentStar.style.width = '4px';
+
+            // Child Star (Follows 1 second later)
+            const childStar = document.createElement('div');
+            childStar.classList.add('shooting-star-child');
+            childStar.style.setProperty('--start-x', `${startX}vw`);
+            childStar.style.setProperty('--start-y', `${startY}vh`);
+            childStar.style.setProperty('--end-x', `${endX}vw`);
+            childStar.style.setProperty('--end-y', `${endY}vh`);
+            childStar.style.setProperty('--duration', `${duration}s`);
+            
+            childStar.style.animationDelay = `calc(${parentStar.style.animationDelay} + 1s)`; 
+            childStar.style.opacity = 0.7;
+            childStar.style.width = '2px';
+
+            starfield.appendChild(parentStar);
+            starfield.appendChild(childStar);
+        }
+
+        // 2. Simple Custom Cursor Dot Animation
+        document.addEventListener('mousemove', (e) => {
+            // Simply move the single cursor dot element
+            if (customCursor) {
+                customCursor.style.left = `${e.clientX}px`;
+                customCursor.style.top = `${e.clientY}px`;
+            }
+        });
+    </script>
+</body>
+</html>

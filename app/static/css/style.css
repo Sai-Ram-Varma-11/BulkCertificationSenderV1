@@ -1,0 +1,144 @@
+:root{
+	--bg:#0f1222;
+	--bg-elev:#151833;
+	--panel:#1b1f3b;
+	--muted:#8b90b3;
+	--text:#e7e9ff;
+	--accent1:#a855f7;
+	--accent2:#ec4899;
+	--success:#22c55e;
+	--warning:#f59e0b;
+	--border:rgba(255,255,255,0.08);
+	--card:#14172b;
+}
+
+.ee-body{margin:0;background:radial-gradient(1200px 600px at 0% 0%, #171a34 0%, #0f1222 50%), var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue','Noto Sans',Arial,'Apple Color Emoji','Segoe UI Emoji';}
+
+.ee-app{min-height:100vh;}
+
+/* Layout */
+.ee-layout{display:grid;grid-template-columns:240px 1fr;gap:24px;max-width:1200px;margin:24px auto;padding:0 16px;}
+.ee-sidebar{background:linear-gradient(180deg,#14172b 0%, #10132a 100%);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:16px;align-self:start}
+.ee-block{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.ee-block .ee-title{font-size:12px;color:var(--muted)}
+.ee-main{min-width:0}
+
+/* Full-width section spanning both columns of the layout grid */
+.ee-full{grid-column:1 / -1}
+
+.ee-brand{font-weight:700;font-size:22px;color:#cbd0ff}
+.ee-sub{color:var(--muted);margin-top:6px;margin-bottom:12px}
+
+.ee-label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+.ee-input{width:100%;background:#0e1124;border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 12px;outline:none}
+.ee-input:focus{border-color:#3940a0;box-shadow:0 0 0 3px rgba(80,90,220,0.15)}
+
+.ee-file-row{display:flex;align-items:center;gap:10px}
+.ee-file-row{justify-content:center}
+.ee-file-btn{position:relative;display:inline-block;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer;align-self:center}
+.ee-sidebar .ee-block .ee-file-row{padding:4px 0}
+.ee-sidebar .ee-block .ee-file-btn{margin:0}
+.ee-sidebar .ee-block #csvName{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ee-sidebar .ee-block #csvForm .ee-btn{margin-left:auto}
+.ee-file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.ee-file-note{color:var(--muted);font-size:12px}
+
+.ee-btn{background:#2a2f58;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer}
+.ee-btn:hover{filter:brightness(1.05)}
+.ee-btn-secondary{background:#1f2342}
+.ee-btn-gradient{background:linear-gradient(90deg,var(--accent1),var(--accent2));border:none}
+.w-100{width:100%}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}
+.d-none{display:none}
+
+.ee-hint{color:var(--muted);font-size:12px;margin-top:6px}
+.ee-divider{height:1px;background:var(--border);margin:16px 0}
+.ee-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Main top KPIs */
+.ee-top{display:grid;grid-template-columns:repeat(3, 1fr) auto;gap:12px}
+.ee-kpi{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.ee-kpi-title{color:var(--muted);font-size:12px}
+.ee-kpi-value{font-size:22px;font-weight:700}
+.ee-kpi-value.accent{background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ee-top-actions{display:flex;align-items:center;gap:12px}
+.ee-top-counts{color:var(--muted);text-align:right}
+
+/* Cards */
+.ee-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.ee-card-head{display:flex;justify-content:space-between;align-items:center}
+.ee-card-title{font-weight:600}
+.ee-card-actions{display:flex;gap:8px;align-items:center}
+.ee-search{width:240px}
+.ee-select{background:#0e1124;border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 12px}
+
+/* Table */
+.ee-table{width:100%;border-collapse:separate;border-spacing:0 8px}
+.ee-table-wrap{max-height:420px;overflow:auto}
+.ee-table thead th{color:var(--muted);font-size:12px;text-align:left;padding:8px}
+.ee-table tbody tr{background:#0f1330}
+.ee-table tbody td{padding:12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.ee-row-actions{display:flex;gap:8px}
+.ee-chip{background:#6671c5;border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:999px;cursor:pointer;font-size:12px}
+.ee-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#64748b;margin-right:6px;vertical-align:middle}
+.ee-dot.ok{background:var(--success)}
+
+/* Grid split */
+.ee-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.ee-preview{background:#0f1330;border:1px dashed var(--border);border-radius:12px;padding:16px;max-width:1000px;margin:0 auto}
+.ee-preview-canvas{height:460px;background:#12162e;border:2px solid #6d5bd0;border-radius:12px;color:#c9cffd;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;background-size:cover;background-position:center}
+.ee-preview-canvas h2{margin:0;font-size:28px}
+.ee-row{display:flex}
+.gap-8{gap:8px}
+
+/* Login */
+.ee-login{min-height:100vh;display:grid;place-items:center;padding:24px}
+.ee-login-card{width:360px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.ee-heading{margin:0}
+.ee-alert{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#241936}
+.ee-alert.error{background:#3a1a2a}
+
+
+/* Responsive Fixes */
+@media (max-width: 1024px) {
+  .ee-layout {
+    grid-template-columns: 1fr;
+  }
+  .ee-sidebar {
+    margin-bottom: 16px;
+  }
+  .ee-grid {
+    grid-template-columns: 1fr;
+  }
+  .ee-top {
+    grid-template-columns: 1fr;
+  }
+  .ee-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .ee-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .ee-top-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .ee-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ee-btn, .ee-input, .ee-select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px){
+	.ee-layout{grid-template-columns:1fr;}
+}

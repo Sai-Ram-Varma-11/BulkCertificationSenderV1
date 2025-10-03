@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="/static/css/style.css" rel="stylesheet">
+	<title>{% block title %}EventEye{% endblock %}</title>
+</head>
+<body class="ee-body">
+	<div class="ee-app">
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				<div style="max-width:1200px;margin:12px auto;padding:0 16px;">
+					{% for category, message in messages %}
+						<div class="ee-alert {{category}}" style="margin-bottom:8px;">{{ message }}</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+		{% endwith %}
+		{% block content %}{% endblock %}
+	</div>
+</body>
+</html>

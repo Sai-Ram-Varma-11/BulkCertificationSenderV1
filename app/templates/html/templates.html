@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Templates - EventEye{% endblock %}
+{% block content %}
+<div class="ee-layout" style="grid-template-columns:1fr;max-width:1000px;">
+	<section class="ee-card">
+		<div class="ee-card-title">Certificate Templates</div>
+		<form method="post" enctype="multipart/form-data" class="ee-two mt-12">
+			<input class="ee-input" name="club" placeholder="Club (optional)">
+			<input class="ee-input" name="name" placeholder="Template Name" required>
+			<label class="ee-file-btn">
+				<input class="" type="file" name="file" accept="image/*" required>
+				Choose Template Image
+			</label>
+			<label class="ee-file-btn">
+				<input class="" type="file" name="coordinates" accept="application/json" required>
+				Choose Coordinates JSON
+			</label>
+			<div></div>
+			<button class="ee-btn ee-btn-gradient" type="submit">Save</button>
+		</form>
+	</section>
+	<section class="ee-card mt-16">
+		<table class="ee-table">
+			<thead><tr><th>ID</th><th>Name</th><th>Club</th><th>Template</th><th>Coordinates</th></tr></thead>
+			<tbody>
+				{% for t in templates %}
+				<tr>
+					<td>{{t.id}}</td>
+					<td>{{t.name}}</td>
+					<td>{{t.club or 'Global'}}</td>
+					<td>{{t.file_path}}</td>
+					<td>{{t.coordinates_path}}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</section>
+</div>
+{% endblock %}

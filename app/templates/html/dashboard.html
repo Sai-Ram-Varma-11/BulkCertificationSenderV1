@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}EventEye Dashboard{% endblock %}
+{% block content %}
+<div class="ee-layout">
+	<aside class="ee-sidebar">
+		<div class="ee-brand">EventEye</div>
+		<div class="ee-sub">Bulk Certificates</div>
+
+		<div class="ee-block">
+			<div class="ee-title">Upload CSV</div>
+			<form id="csvForm" action="/upload_csv" method="post" enctype="multipart/form-data" class="ee-file-row">
+				<label class="ee-file-btn">
+					<input id="csvInput" type="file" name="file" accept=".csv">
+					Choose File
+				</label>
+				<span id="csvName" class="ee-file-note">{% if session.last_csv_name %}{{session.last_csv_name}}{% else %}No file uploaded{% endif %}</span>
+				<button class="ee-btn ee-btn-secondary" type="submit">Upload File</button>
+			</form>
+			<div class="ee-hint">CSV columns: name,email,event,date</div>
+		</div>
+
+	</aside>
+
+	<main class="ee-main">
+		<div class="ee-top">
+			<div class="ee-kpi">
+				<div class="ee-kpi-title">Total Certificates</div>
+				<div class="ee-kpi-value" id="kpiTotal">{{ total }}</div>
+			</div>
+			<div class="ee-kpi">
+				<div class="ee-kpi-title">Delivery Success</div>
+				<div class="ee-kpi-value accent" id="kpiDelivery">{{ delivery_success }}%</div>
+			</div>
+			<div class="ee-kpi">
+				<div class="ee-kpi-title">Bounce Rate</div>
+				<div class="ee-kpi-value">{% set denom = sent_count + bounced_count %}{{ (bounced_count * 100 // denom) if denom else 0 }}%</div>
+			</div>
+			<div class="ee-top-actions">
+				<div class="ee-top-counts">Generated: <span id="kpiGenerated">{{ generated_count }}</span><br>Sent: <span id="kpiSent">{{ sent_count }}</span></div>
+			</div>
+		</div>
+
+		<section class="ee-card mt-16" id="participantsCard">
+			<div class="ee-card-head">
+				<div class="ee-card-title">Participants</div>
+				<div class="ee-card-actions">
+					<form id="filterForm" method="get" class="ee-card-actions">
+						<input class="ee-input ee-search" name="q" value="{{query_text}}" placeholder="Search name or email">
+						<select class="ee-select" name="status">
+							<option value="all" {% if status_filter=='all' %}selected{% endif %}>All Statuses</option>
+							{% for s in ['pending','generated','emailed','bounced'] %}
+							<option value="{{s}}" {% if status_filter==s %}selected{% endif %}>{{s}}</option>
+							{% endfor %}
+						</select>
+						<button class="ee-btn" type="submit">Apply</button>
+					</form>
+					<form action="/participants/remove_all" method="post"><button class="ee-btn ee-btn-secondary" type="submit">Remove All</button></form>
+					<button class="ee-btn" id="refreshBtn" title="Refresh">&#10227;</button>
+				</div>
+			</div>
+			<form id="tableForms">
+				<div class="ee-table-wrap">
+					<table class="ee-table">
+					<thead>
+						<tr><th>S.No.</th><th>Name</th><th>Email</th><th>Event</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+					</thead>
+					<tbody id="participantsTbody">
+						{% for p in participants %}
+						<tr>
+							<td>{{ loop.index }}</td>
+							<td>{{ p.name }}</td>
+							<td>{{ p.email }}</td>
+							<td>{{ p.event }}</td>
+							<td>{{ p.date }}</td>
+							<td><span class="ee-dot {{ 'ok' if p.status in ['generated','emailed'] else '' }}"></span>{{ p.status }}</td>
+							<td class="ee-row-actions">
+								<button formaction="/participants/remove/{{p.id}}" formmethod="post" class="ee-chip">Remove</button>
+								{% if p.status in ['generated','emailed'] %}
+								<button formaction="/send_emails" formmethod="post" class="ee-chip" name="participant_id" value="{{p.id}}">Resend</button>
+								{% endif %}
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+					</table>
+				</div>
+				<form action="/send_all" method="post" class="mt-8">
+					<button id="sendAllBtn" class="ee-btn w-100" type="submit" disabled>Send All Certificates</button>
+				</form>
+			</form>
+		</section>
+
+		<section class="ee-card mt-16 ee-full">
+			<div class="ee-card-title">Certificate Preview</div>
+			<div class="mt-8">
+				<div class="ee-preview" id="previewBox">
+					<div id="previewCanvas" class="ee-preview-canvas"></div>
+				</div>
+				<div class="ee-two mt-12">
+					<input class="ee-input" name="event_name" id="pvEvent"  placeholder="<Event Name>">
+					<input class="ee-input" name="date" id="pvDate" placeholder="<Date>">
+				</div>
+				<div class="ee-two mt-8">
+					<input class="ee-input" name="organizer" id="pvOrg"  placeholder="<Organizer>">
+				</div>
+				<label class="ee-label mt-8">Background image</label>
+				<div class="ee-file-row">
+					<label class="ee-file-btn">
+						<input id="pvBg" type="file" name="bg_image" accept="image/*">
+						Choose File
+					</label>
+					<span class="ee-file-note" id="pvBgName">{% if session.last_bg_name %}{{session.last_bg_name}}{% else %}No file chosen{% endif %}</span>
+				</div>
+				<div class="ee-row gap-8 mt-12">
+					<button class="ee-btn ee-btn-secondary" type="button" id="pvRefresh">Refresh Preview</button>
+					<form action="/generate_all" method="post">
+						<button class="ee-btn ee-btn-gradient" type="submit">Generate All Certificates</button>
+					</form>
+				</div>
+			</div>
+		</section>
+	</main>
+</div>
+<script src="/static/js/main.js"></script>
+<script>
+
+(function(){
+	const $=s=>document.querySelector(s);
+	const eventName=$('#pvEvent'), date=$('#pvDate'), org=$('#pvOrg');
+	const bg=$('#pvBg'); const canvas=$('#previewCanvas'); const bgName=$('#pvBgName');
+	function render(){
+		const nameText = 'Recipient Name';
+		canvas.innerHTML = `${eventName.value}<br><span>Certificate of Participation</span><h2>${nameText}</h2><small>for participating in ${eventName.value} on ${date.value}<br>Organizer: ${org.value}</small>`;
+	}
+	render();
+	['input','change'].forEach(ev=>{[eventName,date,org].forEach(el=>el && el.addEventListener(ev,render));});
+	bg.addEventListener('change',()=>{
+		bgName.textContent = bg.files && bg.files[0]? bg.files[0].name : 'No file chosen';
+		if(bg.files && bg.files[0]){
+			const url = URL.createObjectURL(bg.files[0]);
+			canvas.style.backgroundImage = `url(${url})`;
+			canvas.style.backgroundSize = 'cover';
+			canvas.style.backgroundPosition = 'center';
+		}
+	});
+	$('#pvRefresh').addEventListener('click',render);
+})();
+
+// Partial refresh for participants card
+(function(){
+	function bindRefresh(){
+		const btn = document.getElementById('refreshBtn');
+		if(!btn) return;
+		btn.onclick = async ()=>{
+			btn.disabled = true;
+			try{
+				const resp = await fetch(window.location.href, {headers:{'X-Requested-With':'fetch'}});
+				const html = await resp.text();
+				const doc = new DOMParser().parseFromString(html, 'text/html');
+				const newCard = doc.getElementById('participantsCard');
+				const curCard = document.getElementById('participantsCard');
+				if(newCard && curCard){ curCard.innerHTML = newCard.innerHTML; }
+				// KPIs
+				const kpis = ['kpiTotal','kpiDelivery','kpiGenerated','kpiSent'];
+				for(const id of kpis){
+					const src = doc.getElementById(id);
+					const dst = document.getElementById(id);
+					if(src && dst){ dst.textContent = src.textContent; }
+				}
+				// Rebind after DOM change
+				bindRefresh();
+				updateSendAllState();
+			}finally{
+				btn.disabled = false;
+			}
+		};
+	}
+	function updateSendAllState(){
+		const total = parseInt((document.getElementById('kpiTotal')||{}).textContent||'0',10);
+		const generated = parseInt((document.getElementById('kpiGenerated')||{}).textContent||'0',10);
+		const sendBtn = document.getElementById('sendAllBtn');
+		if(sendBtn){ sendBtn.disabled = !(generated && total && generated === total); }
+	}
+	bindRefresh();
+	updateSendAllState();
+})();
+
+// Initial enablement logic for Send All button on page load
+(function(){
+	const total = parseInt((document.getElementById('kpiTotal')||{}).textContent||'0',10);
+	const generated = parseInt((document.getElementById('kpiGenerated')||{}).textContent||'0',10);
+	const sendBtn = document.getElementById('sendAllBtn');
+	if(sendBtn){ sendBtn.disabled = !(generated && total && generated === total); }
+})();
+</script>
+{% endblock %}

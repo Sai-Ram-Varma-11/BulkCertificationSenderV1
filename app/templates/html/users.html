@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Users - EventEye{% endblock %}
+{% block content %}
+<div class="ee-layout" style="grid-template-columns:1fr;max-width:900px;">
+	<section class="ee-card">
+		<div class="ee-card-title">Create User</div>
+		<form method="post" class="ee-two mt-12">
+			<input class="ee-input" name="email" type="email" placeholder="Email" required>
+			<input class="ee-input" name="password" type="password" placeholder="Password" required>
+			<select class="ee-input" name="role" required>
+				<option value="club">Club</option>
+				<option value="admin">Admin</option>
+				<option value="superadmin">Superadmin</option>
+			</select>
+			<input class="ee-input" name="club" placeholder="Club (optional)">
+			<div></div>
+			<button class="ee-btn ee-btn-gradient" type="submit">Create</button>
+		</form>
+	</section>
+	<section class="ee-card mt-16">
+		<div class="ee-card-title">Users</div>
+		<table class="ee-table mt-12">
+			<thead><tr><th>ID</th><th>Email</th><th>Role</th><th>Club</th></tr></thead>
+			<tbody>
+				{% for u in users %}
+				<tr>
+					<td>{{u.id}}</td>
+					<td>{{u.email}}</td>
+					<td>{{u.role}}</td>
+					<td>{{u.club or ''}}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</section>
+</div>
+{% endblock %}

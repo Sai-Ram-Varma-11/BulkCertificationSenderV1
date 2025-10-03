@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Login - EventEye{% endblock %}
+{% block content %}
+<div class="ee-login">
+	<div class="ee-login-card">
+		<div class="ee-brand mb-12">EventEye</div>
+		<h3 class="ee-heading">Sign in</h3>
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				<div class="mb-8">
+					{% for category, message in messages %}
+						<div class="ee-alert {{category}}">{{ message }}</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+		{% endwith %}
+		<form method="post" class="mt-8">
+			<label class="ee-label">Email</label>
+			<input name="email" type="email" class="ee-input" required>
+			<label class="ee-label mt-8">Password</label>
+			<input name="password" type="password" class="ee-input" required>
+			<button class="ee-btn ee-btn-gradient w-100 mt-12" type="submit">Login</button>
+		</form>
+	</div>
+</div>
+{% endblock %}
